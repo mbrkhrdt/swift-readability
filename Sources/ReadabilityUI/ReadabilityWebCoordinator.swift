@@ -28,14 +28,26 @@ public final class ReadabilityWebCoordinator: ObservableObject {
     }
 
     /// The initial style to apply to the reader content.
-    public let initialStyle: ReaderStyle
+    public var initialStyle: ReaderStyle {
+        styleProvider()
+    }
+
+    private let styleProvider: @MainActor () -> ReaderStyle
 
     /// Initializes a new `ReadabilityWebCoordinator` with the specified initial style.
     ///
     /// - Parameter initialStyle: The initial `ReaderStyle` to use.
     public init(initialStyle: ReaderStyle) {
-        self.initialStyle = initialStyle
+        self.styleProvider = { initialStyle }
     }
+
+    /// Initializes a new `ReadabilityWebCoordinator` with a style provider.
+    ///
+    /// - Parameter styleProvider: A closure that returns the current reader style.
+    public init(styleProvider: @escaping @MainActor () -> ReaderStyle) {
+        self.styleProvider = styleProvider
+    }
+
 
     /// Creates and configures a `WKWebViewConfiguration` for reader mode.
     ///
@@ -61,7 +73,7 @@ public final class ReadabilityWebCoordinator: ObservableObject {
 
         let configuration = WKWebViewConfiguration()
         let messageHandler = ReadabilityMessageHandler(
-            mode: .generateReaderHTML(initialStyle: initialStyle),
+            mode: .generateReaderHTML(styleProvider: styleProvider),
             readerContentGenerator: ReaderContentGenerator()
         )
 

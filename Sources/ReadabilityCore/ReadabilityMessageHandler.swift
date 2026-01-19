@@ -6,8 +6,8 @@ import WebKit
 package final class ReadabilityMessageHandler<Generator: ReaderContentGeneratable>: NSObject, WKScriptMessageHandler {
     /// Modes that determine how the message handler processes content.
     package enum Mode {
-        /// Generates reader HTML using the provided initial style.
-        case generateReaderHTML(initialStyle: ReaderStyle)
+        /// Generates reader HTML using the provided style provider.
+        case generateReaderHTML(styleProvider: @MainActor () -> ReaderStyle)
         /// Returns the raw readability result.
         case generateReadabilityResult
     }
@@ -55,8 +55,8 @@ package final class ReadabilityMessageHandler<Generator: ReaderContentGeneratabl
                    let result = try? JSONDecoder().decode(ReadabilityResult.self, from: jsonData)
                 {
                     switch mode {
-                    case let .generateReaderHTML(initialStyle):
-                        if let html = await self?.readerContentGenerator.generate(result, initialStyle: initialStyle) {
+                    case let .generateReaderHTML(styleProvider):
+                        if let html = await self?.readerContentGenerator.generate(result, initialStyle: styleProvider()) {
                             await self?.eventHandler?(.contentParsedAndGeneratedHTML(html: html))
                         }
                     case .generateReadabilityResult:
